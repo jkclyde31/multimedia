@@ -1,22 +1,13 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useReactMediaRecorder } from "react-media-recorder";
 // import { savePhoto, listPhotos } from './photoActions';
 import { savePhoto, listPhotos } from '@/lib/fileUtils';
-import { useReactMediaRecorder } from 'react-media-recorder';
 
 export default function PhotoCapture() {
   const [photoList, setPhotoList] = useState([]);
   const [error, setError] = useState(null);
-
-  const {
-    startRecording,
-    stopRecording,
-    mediaBlobUrl
-  } = useReactMediaRecorder({
-    video: true,
-    audio: false,
-  });
 
   // Fetch existing photos when component mounts
   useEffect(() => {
@@ -33,8 +24,20 @@ export default function PhotoCapture() {
     fetchPhotos();
   }, []);
 
+  const { 
+    status, 
+    startRecording, 
+    stopRecording, 
+    mediaBlobUrl 
+  } = useReactMediaRecorder({ 
+    video: true,
+    mediaRecorderOptions: {
+      mimeType: 'image/png'
+    }
+  });
+
   // Handle photo capture and save
-  const handleCapture = useCallback(async () => {
+  const handleCapture = async () => {
     try {
       // Stop recording to get the image blob
       stopRecording();
@@ -60,6 +63,9 @@ export default function PhotoCapture() {
           if (result.success) {
             // Update photo list
             setPhotoList(prev => [fileName, ...prev]);
+            
+            // Restart recording
+            startRecording();
           }
         }
       }, 1000);
@@ -67,11 +73,19 @@ export default function PhotoCapture() {
       setError('Failed to save photo');
       console.error(err);
     }
-  }, [mediaBlobUrl, stopRecording]);
+  };
+
+  // Start recording on component mount
+  useEffect(() => {
+    startRecording();
+  }, []);
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-black">Photo Capture</h1>
+      <h1 className="text-2xl font-bold mb-4">Photo Capture</h1>
+
+      {/* Status Display */}
+      <p className="mb-4">Status: {status}</p>
 
       {error && (
         <div className="bg-red-100 text-red-800 p-2 rounded mb-4">
@@ -79,22 +93,19 @@ export default function PhotoCapture() {
         </div>
       )}
 
+      {/* Video Preview */}
       <div className="mb-4">
         <video 
-          id="video" 
+          src={mediaBlobUrl} 
+          controls 
           autoPlay 
-          muted 
+          loop 
           className="w-full h-auto border rounded"
         />
       </div>
 
+      {/* Capture Button */}
       <div className="flex space-x-4 mb-4">
-        <button 
-          onClick={startRecording}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Start Camera
-        </button>
         <button 
           onClick={handleCapture}
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
@@ -103,16 +114,17 @@ export default function PhotoCapture() {
         </button>
       </div>
 
+      {/* Saved Photos List */}
       <div>
-        <h2 className="text-xl font-semibold mb-2 text-black">Saved Photos</h2>
+        <h2 className="text-xl font-semibold mb-2">Saved Photos</h2>
         {photoList.length === 0 ? (
-          <p className='text-black'>No photos saved yet</p>
+          <p>No photos saved yet</p>
         ) : (
           <ul className="space-y-2">
             {photoList.map((photo, index) => (
               <li 
                 key={index} 
-                className="bg-gray-100 p-2 rounded "
+                className="bg-gray-100 p-2 rounded"
               >
                 {photo}
               </li>
