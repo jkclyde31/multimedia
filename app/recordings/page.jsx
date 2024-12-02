@@ -1,8 +1,12 @@
 import { listRecordings } from "@/lib/fileUtils";
+
+export const metadata = {
+  title: "Record List"
+}
+
+
 export default async function RecordingsPage() {
   const recordings = await listRecordings();
-
-
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-md mx-auto bg-white shadow-md rounded-lg p-6">

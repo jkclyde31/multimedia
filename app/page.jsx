@@ -64,7 +64,7 @@ const items = [
 
 const page = () => {
   return (
-    <BentoGrid className="max-w-4xl mx-auto p-3 md:p-20">
+    <BentoGrid className="max-w-5xl mx-auto p-3 md:p-20">
       {items.map((item, i) => (
         <BentoGridItem
           key={i}

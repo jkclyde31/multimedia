@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.46.2",
     "@tabler/icons-react": "^3.23.0",
     "browserify-fs": "^1.0.0",
     "clsx": "^2.1.1",
