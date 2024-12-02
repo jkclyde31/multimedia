@@ -10,9 +10,18 @@ const PhotoCapture = dynamic(() => import('../components/PhotoCapture'), {
 export default function AudioPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
-       <Link href="/" className="absolute top-4 left-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Home
+       
+
+      
+
+      <div className="w-[95%] md:w-full max-w-md  mb-[20px]">
+      <Link href="/" className="
+        self-start
+        shadow-[0_4px_14px_0_rgb(0,0,0,10%)] hover:shadow-[0_6px_20px_rgba(93,93,93,23%)] px-8 py-2 bg-[#fff] text-[#696969] rounded-md font-light transition duration-200 ease-linear">
+          Back to Home
         </Link>
+      </div>
+    
       <div className="w-[95%] md:w-full max-w-md bg-white shadow-md rounded-lg p-6">
         <PhotoCapture />
       </div>

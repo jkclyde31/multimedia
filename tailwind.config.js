@@ -21,28 +21,16 @@ module.exports = {
         foreground: "var(--foreground)",
       },
       keyframes: {
-        aurora: {
+        shimmer: {
           from: {
-            backgroundPosition: "50% 50%, 50% 50%",
+            backgroundPosition: "0 0",
           },
           to: {
-            backgroundPosition: "350% 50%, 350% 50%",
+            backgroundPosition: "-200% 0",
           },
         },
       },
     },
   },
-  plugins: [addVariablesForColors],
+  plugins: [],
 };
-
-function addVariablesForColors({ addBase, theme }) {
-  let allColors = flattenColorPalette(theme("colors"));
-  let newVars = Object.fromEntries(
-    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
-  );
- 
-  addBase({
-    ":root": newVars,
-  });
-}
-
