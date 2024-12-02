@@ -82,10 +82,10 @@ export default function PhotoCapture() {
 
   return (
     <div className="max-w-md mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Photo Capture</h1>
+      <h1 className="text-2xl font-bold mb-4 text-black">Photo Capture</h1>
 
       {/* Status Display */}
-      <p className="mb-4">Status: {status}</p>
+      <p className="mb-4 text-black">Status: {status}</p>
 
       {error && (
         <div className="bg-red-100 text-red-800 p-2 rounded mb-4">
@@ -116,9 +116,9 @@ export default function PhotoCapture() {
 
       {/* Saved Photos List */}
       <div>
-        <h2 className="text-xl font-semibold mb-2">Saved Photos</h2>
+        <h2 className="text-xl font-semibold mb-2 text-black">Saved Photos</h2>
         {photoList.length === 0 ? (
-          <p>No photos saved yet</p>
+          <p className='text-black'>No photos saved yet</p>
         ) : (
           <ul className="space-y-2">
             {photoList.map((photo, index) => (
