@@ -44,14 +44,14 @@ const items = [
     description: "Record and save photos for various purposes.",
     header: <Skeleton image={images[2].path} />,
     icon: <AiOutlineCamera className="h-6 w-6 text-neutral-500" />,
-     link: "/audio"
+     link: "/photo"
   },
   {
     title: "Videos",
     description: "Record and save videos for various purposes.",
     header: <Skeleton image={images[1].path} />,
     icon: <AiOutlineVideoCamera className="h-6 w-6 text-neutral-500" />,
-     link: "/audio"
+     link: "/photo"
   },
    {
     title: "See Record List",
