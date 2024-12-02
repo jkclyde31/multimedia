@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useReactMediaRecorder } from "react-media-recorder";
-// import { savePhoto, listPhotos } from './photoActions';
+import React, { useEffect, useRef, useState } from 'react';
 import { savePhoto, listPhotos } from '@/lib/fileUtils';
 
 export default function PhotoCapture() {
   const [photoList, setPhotoList] = useState([]);
   const [error, setError] = useState(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   // Fetch existing photos when component mounts
   useEffect(() => {
@@ -24,68 +25,95 @@ export default function PhotoCapture() {
     fetchPhotos();
   }, []);
 
-  const { 
-    status, 
-    startRecording, 
-    stopRecording, 
-    mediaBlobUrl 
-  } = useReactMediaRecorder({ 
-    video: true,
-    mediaRecorderOptions: {
-      mimeType: 'image/png'
-    }
-  });
-
-  // Handle photo capture and save
-  const handleCapture = async () => {
+  // Open camera stream
+  const startCamera = async () => {
     try {
-      // Stop recording to get the image blob
-      stopRecording();
-
-      // Wait a moment for the blob to be ready
-      setTimeout(async () => {
-        if (mediaBlobUrl) {
-          // Fetch the blob
-          const response = await fetch(mediaBlobUrl);
-          const blob = await response.blob();
-
-          // Generate a unique filename
-          const fileName = `photo_${new Date().toISOString()}.png`;
-
-          // Create FormData
-          const formData = new FormData();
-          formData.append('blob', blob);
-          formData.append('fileName', fileName);
-
-          // Save photo
-          const result = await savePhoto(formData);
-
-          if (result.success) {
-            // Update photo list
-            setPhotoList(prev => [fileName, ...prev]);
-            
-            // Restart recording
-            startRecording();
-          }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: 'environment' // Prefer back camera on mobile
         }
-      }, 1000);
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setCameraActive(true);
+      }
     } catch (err) {
-      setError('Failed to save photo');
+      setError('Failed to access camera. Please check permissions.');
       console.error(err);
     }
   };
 
-  // Start recording on component mount
+  // Capture photo from camera stream
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context) return;
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw current video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to blob
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        setError('Failed to capture photo');
+        return;
+      }
+
+      try {
+        // Generate a unique filename
+        const fileName = `photo_${new Date().toISOString()}.png`;
+
+        // Create FormData
+        const formData = new FormData();
+        formData.append('blob', blob, fileName);
+        formData.append('fileName', fileName);
+
+        // Save photo
+        const result = await savePhoto(formData);
+
+        if (result.success) {
+          // Update photo list
+          setPhotoList(prev => [fileName, ...prev]);
+        }
+      } catch (err) {
+        setError('Failed to save photo');
+        console.error(err);
+      }
+    }, 'image/png');
+  };
+
+  // Stop camera stream
+  const stopCamera = () => {
+    if (videoRef.current) {
+      const stream = videoRef.current.srcObject;
+      const tracks = stream.getTracks();
+      
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setCameraActive(false);
+    }
+  };
+
+  // Cleanup camera on unmount
   useEffect(() => {
-    startRecording();
+    return () => {
+      stopCamera();
+    };
   }, []);
 
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-black">Photo Capture</h1>
-
-      {/* Status Display */}
-      <p className="mb-4 text-black">Status: {status}</p>
 
       {error && (
         <div className="bg-red-100 text-red-800 p-2 rounded mb-4">
@@ -96,22 +124,41 @@ export default function PhotoCapture() {
       {/* Video Preview */}
       <div className="mb-4">
         <video 
-          src={mediaBlobUrl} 
-          controls 
-          autoPlay 
-          loop 
+          ref={videoRef} 
           className="w-full h-auto border rounded"
+          style={{ display: cameraActive ? 'block' : 'none' }}
+        />
+        <canvas 
+          ref={canvasRef} 
+          className="hidden"
         />
       </div>
 
-      {/* Capture Button */}
+      {/* Camera Controls */}
       <div className="flex space-x-4 mb-4">
-        <button 
-          onClick={handleCapture}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-        >
-          Capture Photo
-        </button>
+        {!cameraActive ? (
+          <button 
+            onClick={startCamera}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Open Camera
+          </button>
+        ) : (
+          <>
+            <button 
+              onClick={capturePhoto}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Capture Photo
+            </button>
+            <button 
+              onClick={stopCamera}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Close Camera
+            </button>
+          </>
+        )}
       </div>
 
       {/* Saved Photos List */}
