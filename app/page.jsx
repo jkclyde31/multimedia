@@ -5,6 +5,8 @@ import Image from "next/image";
 
 
 
+
+
 const Skeleton = ({ image }) => (
   <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-200 dark:from-neutral-900 dark:to-neutral-800 to-neutral-100">
     {image && (
@@ -64,17 +66,18 @@ const items = [
 
 const page = () => {
   return (
-    <BentoGrid className="max-w-5xl mx-auto p-3 md:p-20">
-      {items.map((item, i) => (
-        <BentoGridItem
-          key={i}
-          title={item.title}
-          description={item.description}
-          header={item.header}
-          icon={item.icon}
-          link={item.link}  
-          className={[3].includes(i) ? "md:col-span-3" : ""} />      ))}
-    </BentoGrid>
+      <BentoGrid className="max-w-5xl mx-auto p-3 md:p-20">
+            {items.map((item, i) => (
+              <BentoGridItem
+                key={i}
+                title={item.title}
+                description={item.description}
+                header={item.header}
+                icon={item.icon}
+                link={item.link}  
+                className={[3].includes(i) ? "md:col-span-3" : ""} />      ))}
+          </BentoGrid>
+   
   )
 }
 

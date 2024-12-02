@@ -1,5 +1,5 @@
 import "./globals.css";
-
+import BgProvider from "./components/ui/bg-provider";
 
 export const metadata = {
   title: {
@@ -15,7 +15,10 @@ export default function RootLayout({ children }) {
       <body
         className={`antialiased`}
       >
+        <BgProvider>
         {children}
+        </BgProvider>
+        
       </body>
     </html>
   );
