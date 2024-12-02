@@ -15,10 +15,7 @@ export default function RootLayout({ children }) {
       <body
         className={`antialiased`}
       >
-        <BgProvider>
         {children}
-        </BgProvider>
-        
       </body>
     </html>
   );
