@@ -45,49 +45,49 @@ export default function PhotoCapture() {
     }
   };
 
-  // Capture photo from camera stream
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) return;
-
+  
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-
+  
     if (!context) return;
-
+  
     // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
+  
     // Draw current video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+  
     // Convert canvas to blob
     canvas.toBlob(async (blob) => {
       if (!blob) {
-        setError('Failed to capture photo');
+        setError('Failed to capture photo: Blob creation failed');
         return;
       }
-
+  
       try {
         // Generate a unique filename
         const fileName = `photo_${new Date().toISOString()}.png`;
-
+  
         // Create FormData
         const formData = new FormData();
         formData.append('blob', blob, fileName);
         formData.append('fileName', fileName);
-
+  
         // Save photo
         const result = await savePhoto(formData);
-
+  
         if (result.success) {
           // Update photo list
           setPhotoList(prev => [fileName, ...prev]);
         }
       } catch (err) {
-        setError('Failed to save photo');
-        console.error(err);
+        // Catch and display more detailed error information
+        setError(`Photo save failed: ${err.message}`);
+        console.error('Photo save error details:', err);
       }
     }, 'image/png');
   };
@@ -139,7 +139,7 @@ export default function PhotoCapture() {
         {!cameraActive ? (
           <button 
             onClick={startCamera}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Open Camera
           </button>

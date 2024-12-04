@@ -10,10 +10,6 @@ const PhotoCapture = dynamic(() => import('../components/PhotoCapture'), {
 export default function AudioPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
-       
-
-      
-
       <div className="w-[95%] md:w-full max-w-md  mb-[20px]">
       <Link href="/" className="
         self-start
