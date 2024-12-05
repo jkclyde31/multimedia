@@ -165,14 +165,14 @@ export default function AudioRecorderWithList() {
                 <span>Discard</span>
               </button>
             </div>
-
+{/* 
             <button 
               onClick={handleDownload}
               disabled={isLoading}
               className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 mt-2"
             >
               Download Recording
-            </button>
+            </button> */}
           </div>
         )}
 
