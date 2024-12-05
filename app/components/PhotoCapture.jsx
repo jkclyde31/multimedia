@@ -171,7 +171,7 @@ export default function PhotoCapture() {
             {photoList.map((photo, index) => (
               <li 
                 key={index} 
-                className="bg-gray-100 p-2 rounded"
+                className="bg-gray-100 p-2 rounded text-black"
               >
                 {photo}
               </li>

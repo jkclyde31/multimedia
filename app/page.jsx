@@ -53,13 +53,13 @@ const items = [
     icon: <AiOutlineVideoCamera className="h-6 w-6 text-neutral-500" />,
      link: "/photo"
   },
-   {
-    title: "See Record List",
-    description: "View the list of audio, photo, and video records.",
-    header: <Skeleton  />,
-    icon: <AiOutlineCamera className="h-6 w-6 text-neutral-500" />,
-     link: "/recordings"
-  },
+  //  {
+  //   title: "See Record List",
+  //   description: "View the list of audio, photo, and video records.",
+  //   header: <Skeleton  />,
+  //   icon: <AiOutlineCamera className="h-6 w-6 text-neutral-500" />,
+  //    link: "/recordings"
+  // },
 
 ];
 
