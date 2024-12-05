@@ -51,7 +51,7 @@ const items = [
     description: "Record and save videos for various purposes.",
     header: <Skeleton image={images[1].path} />,
     icon: <AiOutlineVideoCamera className="h-6 w-6 text-neutral-500" />,
-     link: "/photo"
+     link: "/video"
   },
   //  {
   //   title: "See Record List",
