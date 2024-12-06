@@ -116,8 +116,14 @@ export default function VideoCapture() {
       const result = await saveVideo(formData);
 
       if (result.success) {
-        // Update video list
-        setVideoList(prev => [fileName, ...prev]);
+        // Update video list 
+        // Assumes result might return an object with filename and path
+        const newVideo = result.filename 
+          ? { filename: result.filename, path: result.path || result.filename }
+          : fileName;
+        
+        setVideoList(prev => [newVideo, ...prev]);
+        
         // Clear captured video
         setCapturedVideo(null);
       }
@@ -277,7 +283,13 @@ export default function VideoCapture() {
                 key={index} 
                 className="bg-gray-100 p-2 rounded text-black flex justify-between items-center"
               >
-                <span>{video}</span>
+                <span>
+                  {/* Handle both string and object video items */}
+                  {typeof video === 'object' 
+                    ? (video.filename || video.path) 
+                    : video
+                  }
+                </span>
               </li>
             ))}
           </ul>
