@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { saveVideo, listVideos } from '@/lib/fileUtils';
-import { Video, Check, X, Loader2 } from 'lucide-react';
+import { Video, Check, X, Loader2, Circle } from 'lucide-react';
 
 export default function VideoCapture() {
   const [videoList, setVideoList] = useState([]);
@@ -113,23 +113,26 @@ export default function VideoCapture() {
       formData.append('fileName', fileName);
 
       // Save video
+      console.log('Saving video:', fileName);
       const result = await saveVideo(formData);
+      console.log('Save video result:', result);
 
       if (result.success) {
         // Update video list 
-        // Assumes result might return an object with filename and path
-        const newVideo = result.filename 
-          ? { filename: result.filename, path: result.path || result.filename }
-          : fileName;
+        const newVideo = result.filename || fileName;
         
         setVideoList(prev => [newVideo, ...prev]);
         
         // Clear captured video
         setCapturedVideo(null);
+      } else {
+        // Log the full result if save is not successful
+        console.error('Video save failed:', result);
+        setError(`Video save failed: ${result.message || 'Unknown error'}`);
       }
     } catch (err) {
+      console.error('Save video error:', err);
       setError(`Video save failed: ${err.message}`);
-      console.error('Video save error details:', err);
     } finally {
       setIsLoading(false);
     }
@@ -190,16 +193,20 @@ export default function VideoCapture() {
             ref={videoRef} 
             className="w-full h-auto border rounded"
             style={{ 
-              display: cameraActive ? 'block' : 'none',
-              backgroundColor: isRecording ? 'rgba(0,0,0,0.5)' : 'transparent'
+              display: cameraActive ? 'block' : 'none'
             }}
           />
         )}
 
-        {/* Recording Overlay */}
+        {/* Small Recording Indicator */}
         {isRecording && !capturedVideo && (
-          <div className="absolute inset-0 bg-red-500 bg-opacity-50 flex items-center justify-center">
-            <div className="text-white text-xl">Recording...</div>
+          <div className="absolute top-2 right-2">
+            <Circle 
+              fill="red" 
+              color="red" 
+              size={16} 
+              className="animate-pulse"
+            />
           </div>
         )}
 
@@ -284,7 +291,6 @@ export default function VideoCapture() {
                 className="bg-gray-100 p-2 rounded text-black flex justify-between items-center"
               >
                 <span>
-                  {/* Handle both string and object video items */}
                   {typeof video === 'object' 
                     ? (video.filename || video.path) 
                     : video
