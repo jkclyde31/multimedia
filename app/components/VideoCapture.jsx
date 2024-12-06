@@ -10,9 +10,11 @@ export default function VideoCapture() {
   const [cameraActive, setCameraActive] = useState(false);
   const [capturedVideo, setCapturedVideo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const streamRef = useRef(null);
 
   // Fetch existing videos when component mounts
   useEffect(() => {
@@ -35,6 +37,8 @@ export default function VideoCapture() {
       setIsLoading(true);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
           facingMode: 'environment' // Prefer back camera on mobile
         },
         audio: true
@@ -42,11 +46,19 @@ export default function VideoCapture() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+        };
+        
+        // Store stream for later cleanup
+        streamRef.current = stream;
+        
         setCameraActive(true);
 
         // Setup media recorder
-        const mediaRecorder = new MediaRecorder(stream);
+        const mediaRecorder = new MediaRecorder(stream, { 
+          mimeType: 'video/webm;codecs=vp9' 
+        });
         mediaRecorderRef.current = mediaRecorder;
 
         mediaRecorder.ondataavailable = (event) => {
@@ -60,10 +72,7 @@ export default function VideoCapture() {
           const videoUrl = URL.createObjectURL(blob);
           setCapturedVideo({ blob, url: videoUrl });
           chunksRef.current = [];
-
-          // Stop video tracks
-          stream.getTracks().forEach(track => track.stop());
-          setCameraActive(false);
+          setIsRecording(false);
         };
       }
     } catch (err) {
@@ -79,12 +88,13 @@ export default function VideoCapture() {
     if (mediaRecorderRef.current) {
       chunksRef.current = [];
       mediaRecorderRef.current.start();
+      setIsRecording(true);
     }
   };
 
   // Stop recording
   const stopRecording = () => {
-    if (mediaRecorderRef.current) {
+    if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
     }
   };
@@ -130,13 +140,17 @@ export default function VideoCapture() {
 
   // Stop camera stream
   const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject;
-      const tracks = stream.getTracks();
-      
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks();
       tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      
+      streamRef.current = null;
       setCameraActive(false);
+      setIsRecording(false);
     }
   };
 
@@ -169,8 +183,18 @@ export default function VideoCapture() {
           <video 
             ref={videoRef} 
             className="w-full h-auto border rounded"
-            style={{ display: cameraActive ? 'block' : 'none' }}
+            style={{ 
+              display: cameraActive ? 'block' : 'none',
+              backgroundColor: isRecording ? 'rgba(0,0,0,0.5)' : 'transparent'
+            }}
           />
+        )}
+
+        {/* Recording Overlay */}
+        {isRecording && !capturedVideo && (
+          <div className="absolute inset-0 bg-red-500 bg-opacity-50 flex items-center justify-center">
+            <div className="text-white text-xl">Recording...</div>
+          </div>
         )}
 
         {/* Loading Overlay */}
@@ -196,24 +220,26 @@ export default function VideoCapture() {
         )}
 
         {/* Camera Active State */}
-        {cameraActive && !capturedVideo && (
-          <>
-            <button 
-              onClick={startRecording}
-              disabled={isLoading}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center space-x-2"
-            >
-              <Video size={20} />
-              <span>Start Recording</span>
-            </button>
-            <button 
-              onClick={stopRecording}
-              disabled={isLoading}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center space-x-2"
-            >
-              Stop Recording
-            </button>
-          </>
+        {cameraActive && !capturedVideo && !isRecording && (
+          <button 
+            onClick={startRecording}
+            disabled={isLoading}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center space-x-2"
+          >
+            <Video size={20} />
+            <span>Start Recording</span>
+          </button>
+        )}
+
+        {/* Recording State */}
+        {isRecording && (
+          <button 
+            onClick={stopRecording}
+            disabled={isLoading}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center space-x-2"
+          >
+            Stop Recording
+          </button>
         )}
 
         {/* Captured Video State */}
