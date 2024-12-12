@@ -35,6 +35,14 @@ export default function VideoCapture() {
   const startCamera = async () => {
     try {
       setIsLoading(true);
+      setError(null); // Clear any previous errors
+  
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setError('Camera access is not supported in this browser.');
+        return;
+      }
+  
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
           width: { ideal: 1280 },
@@ -43,7 +51,7 @@ export default function VideoCapture() {
         },
         audio: true
       });
-
+  
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
@@ -54,19 +62,19 @@ export default function VideoCapture() {
         streamRef.current = stream;
         
         setCameraActive(true);
-
+  
         // Setup media recorder
         const mediaRecorder = new MediaRecorder(stream, { 
           mimeType: 'video/webm;codecs=vp9' 
         });
         mediaRecorderRef.current = mediaRecorder;
-
+  
         mediaRecorder.ondataavailable = (event) => {
           if (event.data.size > 0) {
             chunksRef.current.push(event.data);
           }
         };
-
+  
         mediaRecorder.onstop = () => {
           const blob = new Blob(chunksRef.current, { type: 'video/webm' });
           const videoUrl = URL.createObjectURL(blob);
@@ -76,8 +84,24 @@ export default function VideoCapture() {
         };
       }
     } catch (err) {
-      setError('Failed to access camera. Please check permissions.');
-      console.error(err);
+      // More detailed error handling
+      switch (err.name) {
+        case 'NotFoundError':
+          setError('No camera found. Please connect a camera and try again.');
+          break;
+        case 'NotAllowedError':
+          setError('Camera access was denied. Please check your browser and system permissions.');
+          break;
+        case 'OverconstrainedError':
+          setError('Unable to find a camera that meets the specified constraints.');
+          break;
+        case 'SecurityError':
+          setError('Security error accessing the camera. Ensure you are on a secure (HTTPS) connection.');
+          break;
+        default:
+          setError(`Failed to access camera: ${err.message || 'Unknown error'}`);
+      }
+      console.error('Camera access error:', err);
     } finally {
       setIsLoading(false);
     }

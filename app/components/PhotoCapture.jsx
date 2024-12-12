@@ -28,28 +28,57 @@ export default function PhotoCapture() {
     fetchPhotos();
   }, []);
 
-  // Open camera stream
-  const startCamera = async () => {
-    try {
-      setIsLoading(true);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment' // Prefer back camera on mobile
-        }
-      });
+// Open Camera Stream
+const startCamera = async () => {
+  try {
+    setIsLoading(true);
+    setError(null); // Clear any previous errors
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-        setCameraActive(true);
-      }
-    } catch (err) {
-      setError('Failed to access camera. Please check permissions.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
+    // Check if media devices are supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('Media devices are not supported in this browser.');
+      return;
     }
-  };
+
+    // Check available devices before attempting to access
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+    if (videoDevices.length === 0) {
+      setError('No camera devices found. Please connect a camera.');
+      return;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { 
+        facingMode: 'environment' // Prefer back camera on mobile
+      }
+    });
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play();
+      setCameraActive(true);
+    }
+  } catch (err) {
+    switch (err.name) {
+      case 'NotFoundError':
+        setError('No camera found. Please connect a camera device.');
+        break;
+      case 'NotAllowedError':
+        setError('Camera access was denied. Please grant camera permissions.');
+        break;
+      case 'OverconstrainedError':
+        setError('No camera meets the specified constraints.');
+        break;
+      default:
+        setError(`Camera access failed: ${err.message}`);
+    }
+    console.error('Camera access error:', err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -131,6 +160,17 @@ export default function PhotoCapture() {
     }
   };
 
+  // Add a useEffect to check for device support on mount
+    useEffect(() => {
+      const checkDeviceSupport = async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          setError('Media devices are not supported in this browser.');
+        }
+      };
+
+      checkDeviceSupport();
+    }, []);
+
   // Cleanup camera on unmount
   useEffect(() => {
     return () => {
@@ -141,12 +181,13 @@ export default function PhotoCapture() {
   return (
     <div className="max-w-md mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-black">Photo Capture</h1>
-
       {error && (
         <div className="bg-red-100 text-red-800 p-2 rounded mb-4">
           {error}
         </div>
       )}
+
+      
 
       {/* Video Preview or Captured Image */}
       <div className="mb-4 relative">

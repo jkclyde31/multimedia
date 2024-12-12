@@ -26,7 +26,14 @@ export default function AudioRecorderWithList() {
       }
     },
     onError: (err) => {
-      setError(err.message || 'An error occurred during recording');
+      // More specific error handling
+      if (err.name === 'NotFoundError') {
+        setError('No recording device found. Please check your microphone connection.');
+      } else if (err.name === 'NotAllowedError') {
+        setError('Microphone access was denied. Please grant microphone permissions.');
+      } else {
+        setError(err.message || 'An error occurred during recording');
+      }
     }
   });
 
@@ -72,6 +79,28 @@ export default function AudioRecorderWithList() {
       setIsLoading(false);
     }
   };
+
+  // Add a useEffect to check for media device support
+useEffect(() => {
+  const checkMediaDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+      
+      if (audioInputDevices.length === 0) {
+        setError('No audio input devices found.');
+      }
+    } catch (err) {
+      setError('Error checking audio devices: ' + err.message);
+    }
+  };
+
+  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    checkMediaDevices();
+  } else {
+    setError('Media devices are not supported in this browser.');
+  }
+}, []);
 
   // Discard the pending recording
   const discardRecording = () => {
@@ -140,6 +169,8 @@ export default function AudioRecorderWithList() {
             Stop Recording
           </button>
         </div>
+
+        
 
         {/* Pending Recording Preview */}
         {pendingRecording && (
